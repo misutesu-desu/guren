@@ -10,6 +10,10 @@ Opens JPEG, PNG, WebP, GIF, BMP, TIFF and ICO, and applies the EXIF orientation.
 
 Get `guren.exe` from the [latest release](https://github.com/misutesu-desu/guren/releases/latest). No installer, just run it.
 
+## Default viewer
+
+Open the ⋯ menu in the top right and choose **Set as default photo viewer**. Guren registers itself for your user account, no admin rights needed, and the Windows Default apps page opens. Windows does not let programs make themselves the default, so pick Guren there to finish. **Remove from Open with** in the same menu undoes the registration. If you move `guren.exe`, it updates the registered path on the next start.
+
 ## Building
 
 ```bash

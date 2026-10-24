@@ -10,6 +10,10 @@ JPEG, PNG, WebP, GIF, BMP, TIFF ve ICO açar. EXIF yön bilgisini uygular.
 
 `guren.exe` dosyasını [son sürümden](https://github.com/misutesu-desu/guren/releases/latest) indirin. Kurulum gerekmez.
 
+## Varsayılan görüntüleyici
+
+Sağ üstteki ⋯ menüsünden **Varsayılan fotoğraf görüntüleyici yap**'ı seçin. Guren kendini kullanıcı hesabınıza kaydeder, yönetici izni gerekmez, ardından Windows'un Varsayılan uygulamalar sayfası açılır. Windows programların kendini varsayılan yapmasına izin vermez, bu yüzden son adımda Guren'i orada seçin. Aynı menüdeki **Birlikte aç listesinden kaldır** kaydı geri alır. `guren.exe`'yi başka yere taşırsanız bir sonraki açılışta kayıtlı yol güncellenir.
+
 ## Derleme
 
 ```bash
