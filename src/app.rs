@@ -7,6 +7,8 @@ use eframe::egui::{
     Ui, Vec2, ViewportCommand, pos2, vec2,
 };
 
+#[cfg(windows)]
+use crate::assoc;
 use crate::folder;
 use crate::i18n::{Lang, Text};
 use crate::loader::{Loaded, Loader, Outcome};
@@ -35,6 +37,8 @@ pub struct App {
     lang: Lang,
     has_icons: bool,
     message: Option<String>,
+    /// Short feedback in the status bar, such as the result of a menu action.
+    notice: Option<String>,
     title: String,
 }
 
@@ -69,12 +73,36 @@ impl App {
             lang,
             has_icons,
             message: None,
+            notice: None,
             title: String::new(),
         };
         if let Some(path) = start {
             app.open(vec![path]);
         }
+        #[cfg(windows)]
+        if let Err(e) = std::env::current_exe().and_then(|exe| assoc::refresh_if_moved(&exe)) {
+            app.notice = Some(app.t().assoc_failed.replace("{error}", &e.to_string()));
+        }
         app
+    }
+
+    #[cfg(windows)]
+    fn set_default(&mut self) {
+        match std::env::current_exe().and_then(|exe| assoc::register(&exe)) {
+            Ok(()) => {
+                assoc::open_default_apps();
+                self.notice = Some(self.t().default_hint.into());
+            }
+            Err(e) => self.notice = Some(self.t().assoc_failed.replace("{error}", &e.to_string())),
+        }
+    }
+
+    #[cfg(windows)]
+    fn remove_default(&mut self) {
+        self.notice = Some(match assoc::unregister() {
+            Ok(()) => self.t().default_removed.into(),
+            Err(e) => self.t().assoc_failed.replace("{error}", &e.to_string()),
+        });
     }
 
     fn t(&self) -> &'static Text {
@@ -199,12 +227,7 @@ impl App {
     fn pick_files(&mut self) {
         let picked = rfd::FileDialog::new()
             .set_title(self.t().dialog_title)
-            .add_filter(
-                self.t().dialog_filter,
-                &[
-                    "jpg", "jpeg", "jfif", "png", "webp", "gif", "bmp", "tif", "tiff", "ico",
-                ],
-            )
+            .add_filter(self.t().dialog_filter, folder::EXTENSIONS)
             .pick_files();
         if let Some(paths) = picked {
             self.open(paths);
@@ -328,6 +351,10 @@ impl App {
             Action::Fullscreen => Self::toggle_fullscreen(ctx),
             Action::Theme => self.cycle_theme(ctx),
             Action::Language => self.lang = self.lang.next(),
+            #[cfg(windows)]
+            Action::SetDefault => self.set_default(),
+            #[cfg(windows)]
+            Action::RemoveDefault => self.remove_default(),
         }
     }
 
@@ -361,6 +388,8 @@ impl App {
 
             ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
                 ui.add_space(6.0);
+                #[cfg(windows)]
+                self.more_menu(ui, &mut action);
                 let full = ui.input(|i| i.viewport().fullscreen.unwrap_or(false));
                 let (glyph, tip) = if full {
                     ("\u{E73F}", t.leave_fullscreen_tip)
@@ -425,6 +454,31 @@ impl App {
         }
     }
 
+    #[cfg(windows)]
+    fn more_menu(&self, ui: &mut Ui, action: &mut Option<Action>) {
+        let t = self.t();
+        let label = if self.has_icons {
+            RichText::new("\u{E712}")
+                .family(FontFamily::Name(ICONS.into()))
+                .size(16.0)
+        } else {
+            RichText::new("⋯")
+        };
+        ui.menu_button(label, |ui| {
+            if ui.button(t.set_default).clicked() {
+                *action = Some(Action::SetDefault);
+            }
+            if ui
+                .add_enabled(assoc::is_registered(), egui::Button::new(t.remove_default))
+                .clicked()
+            {
+                *action = Some(Action::RemoveDefault);
+            }
+        })
+        .response
+        .on_hover_text(t.more_tip);
+    }
+
     fn icon_button(&self, ui: &mut Ui, glyph: &str, fallback: &str, tip: &str) -> egui::Response {
         let text = if self.has_icons {
             RichText::new(glyph)
@@ -454,33 +508,38 @@ impl App {
 
     fn status_bar(&self, ui: &mut Ui, pal: &Pal) {
         ui.horizontal_centered(|ui| {
-            ui.add_space(10.0);
-            let Some(path) = self.current() else {
-                return;
-            };
             let small = |s: String, c: Color32| RichText::new(s).size(12.0).color(c);
-            ui.label(small(
-                format!("{} / {}", self.index + 1, self.files.len()),
-                pal.weak,
-            ));
-            ui.add_space(8.0);
-            let name = path
-                .file_name()
-                .map(|n| n.to_string_lossy())
-                .unwrap_or_default();
-            ui.label(small(name.into_owned(), pal.text));
-            match self.cache.get(path) {
-                Some(Ok(l)) => {
-                    ui.add_space(8.0);
-                    ui.label(small(format!("{} × {}", l.size[0], l.size[1]), pal.weak));
-                    ui.add_space(8.0);
-                    ui.label(small(human_size(l.bytes), pal.weak));
+            ui.add_space(10.0);
+            if let Some(path) = self.current() {
+                ui.label(small(
+                    format!("{} / {}", self.index + 1, self.files.len()),
+                    pal.weak,
+                ));
+                ui.add_space(8.0);
+                let name = path
+                    .file_name()
+                    .map(|n| n.to_string_lossy())
+                    .unwrap_or_default();
+                ui.label(small(name.into_owned(), pal.text));
+                match self.cache.get(path) {
+                    Some(Ok(l)) => {
+                        ui.add_space(8.0);
+                        ui.label(small(format!("{} × {}", l.size[0], l.size[1]), pal.weak));
+                        ui.add_space(8.0);
+                        ui.label(small(human_size(l.bytes), pal.weak));
+                    }
+                    Some(Err(_)) => {}
+                    None => {
+                        ui.add_space(8.0);
+                        ui.label(small(self.t().loading.into(), pal.weak));
+                    }
                 }
-                Some(Err(_)) => {}
-                None => {
-                    ui.add_space(8.0);
-                    ui.label(small(self.t().loading.into(), pal.weak));
-                }
+            }
+            if let Some(n) = &self.notice {
+                ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
+                    ui.add_space(10.0);
+                    ui.label(small(n.clone(), pal.weak));
+                });
             }
         });
     }
@@ -691,6 +750,10 @@ enum Action {
     Fullscreen,
     Theme,
     Language,
+    #[cfg(windows)]
+    SetDefault,
+    #[cfg(windows)]
+    RemoveDefault,
 }
 
 impl eframe::App for App {

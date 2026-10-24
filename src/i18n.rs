@@ -71,6 +71,12 @@ pub struct Text {
     pub drop_release: &'static str,
     pub or_ctrl_o: &'static str,
     pub open_photo: &'static str,
+    pub more_tip: &'static str,
+    pub set_default: &'static str,
+    pub remove_default: &'static str,
+    pub default_hint: &'static str,
+    pub default_removed: &'static str,
+    pub assoc_failed: &'static str,
 }
 
 pub const EN: Text = Text {
@@ -101,6 +107,12 @@ pub const EN: Text = Text {
     drop_release: "Release to open",
     or_ctrl_o: "or pick one with Ctrl+O",
     open_photo: "Open photo",
+    more_tip: "More",
+    set_default: "Set as default photo viewer",
+    remove_default: "Remove from Open with",
+    default_hint: "Pick Guren as the photo viewer in Settings",
+    default_removed: "Guren is no longer offered for photos",
+    assoc_failed: "Could not change file associations: {error}",
 };
 
 pub const TR: Text = Text {
@@ -131,4 +143,10 @@ pub const TR: Text = Text {
     drop_release: "Bırakınca açılır",
     or_ctrl_o: "ya da Ctrl+O ile seçin",
     open_photo: "Fotoğraf aç",
+    more_tip: "Diğer",
+    set_default: "Varsayılan fotoğraf görüntüleyici yap",
+    remove_default: "Birlikte aç listesinden kaldır",
+    default_hint: "Ayarlar'da fotoğraf görüntüleyici olarak Guren'i seçin",
+    default_removed: "Guren artık fotoğraflar için önerilmiyor",
+    assoc_failed: "Dosya ilişkilendirmeleri değiştirilemedi: {error}",
 };

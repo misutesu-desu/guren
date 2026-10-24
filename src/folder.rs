@@ -1,7 +1,7 @@
 use std::cmp::Ordering;
 use std::path::{Path, PathBuf};
 
-const EXTENSIONS: &[&str] = &[
+pub const EXTENSIONS: &[&str] = &[
     "jpg", "jpeg", "jfif", "jpe", "png", "webp", "gif", "bmp", "tif", "tiff", "ico",
 ];
 
