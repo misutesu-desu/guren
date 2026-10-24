@@ -8,6 +8,7 @@ use eframe::egui::{
 };
 
 use crate::folder;
+use crate::i18n::{Lang, Text};
 use crate::loader::{Loaded, Loader, Outcome};
 use crate::theme::{self, ICONS, Pal};
 use crate::view::{STEP, View, Zoom, fit_scale};
@@ -31,6 +32,7 @@ pub struct App {
     /// The last photo that was on screen. Stays visible, dimmed, while the next one decodes.
     shown: Option<Loaded>,
     theme: ThemePreference,
+    lang: Lang,
     has_icons: bool,
     message: Option<String>,
     title: String,
@@ -49,6 +51,11 @@ impl App {
                 _ => ThemePreference::System,
             });
         theme::apply(ctx, theme);
+        let lang = cc
+            .storage
+            .and_then(|s| s.get_string("lang"))
+            .and_then(|c| Lang::from_code(&c))
+            .unwrap_or_else(Lang::detect);
 
         let mut app = Self {
             files: Vec::new(),
@@ -59,6 +66,7 @@ impl App {
             view: View::default(),
             shown: None,
             theme,
+            lang,
             has_icons,
             message: None,
             title: String::new(),
@@ -67,6 +75,10 @@ impl App {
             app.open(vec![path]);
         }
         app
+    }
+
+    fn t(&self) -> &'static Text {
+        self.lang.text()
     }
 
     fn current(&self) -> Option<&PathBuf> {
@@ -109,8 +121,10 @@ impl App {
                 self.direction = 1;
                 self.cache.clear();
             }
-            Ok(_) => self.message = Some("Bu konumda açılabilen fotoğraf yok.".into()),
-            Err(e) => self.message = Some(format!("Klasör okunamadı: {e}")),
+            Ok(_) => self.message = Some(self.t().no_images.into()),
+            Err(e) => {
+                self.message = Some(self.t().folder_error.replace("{error}", &e.to_string()))
+            }
         }
     }
 
@@ -183,9 +197,9 @@ impl App {
 
     fn pick_files(&mut self) {
         let picked = rfd::FileDialog::new()
-            .set_title("Fotoğraf aç")
+            .set_title(self.t().dialog_title)
             .add_filter(
-                "Fotoğraflar",
+                self.t().dialog_filter,
                 &["jpg", "jpeg", "jfif", "png", "webp", "gif", "bmp", "tif", "tiff", "ico"],
             )
             .pick_files();
@@ -263,6 +277,9 @@ impl App {
             if i.consume_key(Modifiers::NONE, Key::T) {
                 action = Some(Action::Theme);
             }
+            if i.consume_key(Modifiers::NONE, Key::L) {
+                action = Some(Action::Language);
+            }
             let held = |k| i.key_down(k);
             let speed = 900.0 * i.stable_dt.min(0.05) * ppp;
             if held(Key::ArrowUp) {
@@ -306,27 +323,29 @@ impl App {
             }
             Action::Fullscreen => Self::toggle_fullscreen(ctx),
             Action::Theme => self.cycle_theme(ctx),
+            Action::Language => self.lang = self.lang.next(),
         }
     }
 
     fn toolbar(&mut self, ui: &mut Ui, pal: &Pal, area: Rect) {
+        let t = self.t();
         let mut action = None;
         ui.horizontal_centered(|ui| {
             ui.add_space(6.0);
-            if self.icon_button(ui, "\u{E8E5}", "Aç", "Aç (Ctrl+O)").clicked() {
+            if self.icon_button(ui, "\u{E8E5}", t.open, t.open_tip).clicked() {
                 action = Some(Action::Open);
             }
             ui.add_space(6.0);
             let many = self.files.len() > 1;
             if ui
-                .add_enabled_ui(many, |ui| self.icon_button(ui, "\u{E76B}", "‹", "Önceki (←)"))
+                .add_enabled_ui(many, |ui| self.icon_button(ui, "\u{E76B}", "‹", t.prev_tip))
                 .inner
                 .clicked()
             {
                 action = Some(Action::Go(-1));
             }
             if ui
-                .add_enabled_ui(many, |ui| self.icon_button(ui, "\u{E76C}", "›", "Sonraki (→)"))
+                .add_enabled_ui(many, |ui| self.icon_button(ui, "\u{E76C}", "›", t.next_tip))
                 .inner
                 .clicked()
             {
@@ -337,35 +356,41 @@ impl App {
                 ui.add_space(6.0);
                 let full = ui.input(|i| i.viewport().fullscreen.unwrap_or(false));
                 let (glyph, tip) = if full {
-                    ("\u{E73F}", "Tam ekrandan çık (F11)")
+                    ("\u{E73F}", t.leave_fullscreen_tip)
                 } else {
-                    ("\u{E740}", "Tam ekran (F11)")
+                    ("\u{E740}", t.fullscreen_tip)
                 };
-                if self.icon_button(ui, glyph, "Tam ekran", tip).clicked() {
+                if self.icon_button(ui, glyph, t.fullscreen, tip).clicked() {
                     action = Some(Action::Fullscreen);
                 }
                 let theme_tip = match self.theme {
-                    ThemePreference::System => "Tema: sistem (T)",
-                    ThemePreference::Dark => "Tema: koyu (T)",
-                    ThemePreference::Light => "Tema: açık (T)",
+                    ThemePreference::System => t.theme_system_tip,
+                    ThemePreference::Dark => t.theme_dark_tip,
+                    ThemePreference::Light => t.theme_light_tip,
                 };
-                if self.icon_button(ui, "\u{E793}", "Tema", theme_tip).clicked() {
+                if self.icon_button(ui, "\u{E793}", t.theme, theme_tip).clicked() {
                     action = Some(Action::Theme);
+                }
+                let lang = egui::Button::new(self.lang.code().to_uppercase())
+                    .frame_when_inactive(false)
+                    .min_size(vec2(32.0, 24.0));
+                if ui.add(lang).on_hover_text(t.language_tip).clicked() {
+                    action = Some(Action::Language);
                 }
                 ui.add_space(6.0);
                 let has_image = self.shown.is_some();
                 ui.add_enabled_ui(has_image, |ui| {
                     if ui
                         .add(egui::Button::new("1:1").min_size(vec2(32.0, 24.0)))
-                        .on_hover_text("Gerçek boyut (1)")
+                        .on_hover_text(t.actual_size_tip)
                         .clicked()
                     {
                         action = Some(Action::Actual);
                     }
-                    if self.icon_button(ui, "\u{E9A6}", "Sığdır", "Pencereye sığdır (0)").clicked() {
+                    if self.icon_button(ui, "\u{E9A6}", t.fit, t.fit_tip).clicked() {
                         action = Some(Action::Fit);
                     }
-                    if self.icon_button(ui, "\u{E8A3}", "+", "Yakınlaştır (+)").clicked() {
+                    if self.icon_button(ui, "\u{E8A3}", "+", t.zoom_in_tip).clicked() {
                         action = Some(Action::ZoomBy(STEP));
                     }
                     let percent = self.zoom_percent(ui.ctx(), area);
@@ -373,7 +398,7 @@ impl App {
                         vec2(52.0, 24.0),
                         egui::Label::new(RichText::new(percent).color(pal.weak)),
                     );
-                    if self.icon_button(ui, "\u{E71F}", "−", "Uzaklaştır (−)").clicked() {
+                    if self.icon_button(ui, "\u{E71F}", "−", t.zoom_out_tip).clicked() {
                         action = Some(Action::ZoomBy(1.0 / STEP));
                     }
                 });
@@ -429,7 +454,7 @@ impl App {
                 Some(Err(_)) => {}
                 None => {
                     ui.add_space(8.0);
-                    ui.label(small("yükleniyor".into(), pal.weak));
+                    ui.label(small(self.t().loading.into(), pal.weak));
                 }
             }
         });
@@ -522,7 +547,7 @@ impl App {
                 painter.text(
                     area.center(),
                     Align2::CENTER_CENTER,
-                    format!("{name} açılamadı\n{e}"),
+                    self.t().open_failed.replace("{name}", &name).replace("{error}", &e),
                     FontId::proportional(14.0),
                     pal.error_text,
                 );
@@ -549,19 +574,19 @@ impl App {
         ui.scope_builder(egui::UiBuilder::new().max_rect(rect), |ui| {
             ui.vertical_centered(|ui| {
                 let text = if hovering {
-                    "Bırakınca açılır"
+                    self.t().drop_release
                 } else {
-                    "Bir fotoğrafı ya da klasörü buraya sürükleyin"
+                    self.t().drop_here
                 };
                 ui.label(RichText::new(text).size(20.0));
                 ui.add_space(4.0);
                 if let Some(m) = &self.message {
                     ui.label(RichText::new(m).color(pal.error_text));
                 } else {
-                    ui.label(RichText::new("ya da Ctrl+O ile seçin").color(pal.weak));
+                    ui.label(RichText::new(self.t().or_ctrl_o).color(pal.weak));
                 }
                 ui.add_space(12.0);
-                let open = egui::Button::new(RichText::new("Fotoğraf aç").color(pal.on_accent))
+                let open = egui::Button::new(RichText::new(self.t().open_photo).color(pal.on_accent))
                     .fill(pal.accent_text)
                     .stroke(Stroke::NONE)
                     .min_size(vec2(120.0, 32.0));
@@ -630,6 +655,7 @@ enum Action {
     Actual,
     Fullscreen,
     Theme,
+    Language,
 }
 
 impl eframe::App for App {
@@ -698,6 +724,7 @@ impl eframe::App for App {
             ThemePreference::System => "system",
         };
         storage.set_string("theme", theme.into());
+        storage.set_string("lang", self.lang.code().into());
     }
 }
 

@@ -2,6 +2,7 @@
 
 mod app;
 mod folder;
+mod i18n;
 mod loader;
 mod theme;
 mod view;
