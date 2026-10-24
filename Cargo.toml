@@ -1,0 +1,17 @@
+[package]
+name = "guren"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+eframe = { version = "0.37.0", default-features = false, features = ["default_fonts", "glow", "persistence"] }
+image = { version = "0.25.10", default-features = false, features = ["jpeg", "png", "webp", "gif", "bmp", "tiff", "ico"] }
+rfd = "0.17.2"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+
+# Decoding is far too slow without optimizations, even while developing.
+[profile.dev.package."*"]
+opt-level = 3
