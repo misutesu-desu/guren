@@ -1,0 +1,30 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test
+      - run: cargo build --release
+      # The annotated tag message becomes the release notes.
+      - name: Publish
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          if gh release view "$tag" > /dev/null 2>&1; then
+            gh release upload "$tag" target/release/guren.exe --clobber
+          else
+            gh release create "$tag" target/release/guren.exe --title "Guren ${tag#v}" --notes-from-tag
+          fi
