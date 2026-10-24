@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guren</title>
+<meta name="description" content="Windows için hızlı fotoğraf görüntüleyici. Geçişte yakınlaştırma korunur.">
+<style>
+:root {
+  color-scheme: dark;
+  --strip: #0a0a0a; --content: #191919; --nav: #1f1f1f; --field: #2c2c2c;
+  --hover: #2d2d2d; --divider: #303030; --line: #3a3a3a; --pressed: #424242;
+  --button: #2d2d2d; --button-stroke: #3a3a3a;
+  --text: #f0f0f0; --weak: #c8c8c8;
+  --accent-text: #60cdff; --on-accent: #000;
+  --focus: var(--text);
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --strip: #e8e8e8; --content: #fff; --nav: #f9f9f9; --field: #fff;
+  --hover: #f0f0f0; --divider: #e5e5e5; --line: #e5e5e5; --pressed: #dedede;
+  --button: #fbfbfb; --button-stroke: #dedede;
+  --text: #1a1a1a; --weak: #606060;
+  --accent-text: #005fb8; --on-accent: #fff;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+    --strip: #e8e8e8; --content: #fff; --nav: #f9f9f9; --field: #fff;
+    --hover: #f0f0f0; --divider: #e5e5e5; --line: #e5e5e5; --pressed: #dedede;
+    --button: #fbfbfb; --button-stroke: #dedede;
+    --text: #1a1a1a; --weak: #606060;
+    --accent-text: #005fb8; --on-accent: #fff;
+  }
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--content); color: var(--text);
+  font: 14px/1.5 "Segoe UI Variable", "Segoe UI", system-ui, sans-serif; }
+a { color: var(--accent-text); }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+
+header { background: var(--nav); border-bottom: 1px solid var(--divider); }
+.bar { max-width: 880px; margin: 0 auto; padding: 0 16px; height: 48px;
+  display: flex; align-items: center; justify-content: space-between; }
+.logo { font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.logo span { width: 12px; height: 12px; border-radius: 3px; background: #c42b1c; }
+.bar nav { display: flex; gap: 4px; align-items: center; }
+.bar nav a { color: var(--text); text-decoration: none; padding: 4px 8px; border-radius: 5px; }
+.bar nav a:hover { background: var(--hover); }
+
+main { max-width: 880px; margin: 0 auto; padding: 48px 16px 64px; }
+h1 { font-size: 32px; font-weight: 600; margin: 0 0 8px; line-height: 1.2; }
+h2 { font-size: 20px; font-weight: 400; margin: 48px 0 12px; }
+.lead { color: var(--weak); font-size: 16px; max-width: 620px; margin: 0 0 24px; }
+
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn { display: inline-flex; align-items: center; min-height: 36px; padding: 6px 16px;
+  border-radius: 5px; text-decoration: none; border: 1px solid var(--button-stroke);
+  background: var(--button); color: var(--text); }
+.btn:hover { background: var(--hover); }
+.btn:active { background: var(--pressed); }
+.btn.primary { background: var(--accent-text); color: var(--on-accent); border: 0; }
+.btn.primary:hover { filter: brightness(1.08); }
+.note { color: var(--weak); font-size: 12px; margin-top: 8px; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.card { background: var(--nav); border: 1px solid var(--line); border-radius: 8px; padding: 16px; }
+.card h3 { font-size: 14px; font-weight: 600; margin: 0 0 4px; }
+.card p { margin: 0; color: var(--weak); }
+
+table { width: 100%; border-collapse: collapse; }
+td { padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+td:first-child { width: 40%; }
+kbd { font: 13px Consolas, monospace; background: var(--field); border: 1px solid var(--line);
+  border-bottom-width: 2px; border-radius: 4px; padding: 0 6px; white-space: nowrap; }
+pre { background: var(--strip); border: 1px solid var(--line); border-radius: 8px;
+  padding: 12px 16px; overflow-x: auto; font: 13px/1.5 Consolas, monospace; }
+
+button.theme { background: transparent; color: var(--text); border: 1px solid var(--button-stroke);
+  border-radius: 5px; min-height: 28px; padding: 2px 10px; font: inherit; cursor: pointer; }
+button.theme:hover { background: var(--hover); }
+button.theme:active { background: var(--pressed); }
+footer { border-top: 1px solid var(--divider); color: var(--weak); font-size: 12px; }
+footer .bar { height: 40px; }
+
+@media (max-width: 560px) {
+  h1 { font-size: 26px; }
+  .hide-sm { display: none; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div class="logo"><span aria-hidden="true"></span>Guren</div>
+    <nav>
+      <a class="hide-sm" href="#kisayollar">Kısayollar</a>
+      <a href="https://github.com/misutesu-desu/guren">GitHub</a>
+      <button class="theme" id="theme" type="button">Tema: sistem</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <h1>Guren</h1>
+  <p class="lead">Windows için hızlı bir fotoğraf görüntüleyici. Ok tuşlarıyla geçersin, yakınlaştırdığın yer bir sonraki karede de aynı kalır.</p>
+  <div class="actions">
+    <a class="btn primary" href="https://github.com/misutesu-desu/guren/releases/latest/download/guren.exe">guren.exe indir</a>
+    <a class="btn" href="https://github.com/misutesu-desu/guren/releases">Bütün sürümler</a>
+  </div>
+  <p class="note">Kurulum gerekmez. Windows 10 ve 11, 64 bit.</p>
+
+  <h2>Neler var</h2>
+  <div class="grid">
+    <div class="card"><h3>Takılmadan geçiş</h3><p>Fotoğraflar arka planda çözülür, açık olanın iki yanındaki ikişer kare önceden hazır bekler.</p></div>
+    <div class="card"><h3>Zoom korunur</h3><p>Art arda çekilmiş kareleri aynı noktadan karşılaştırırsın. Çözünürlük farklı olsa da aynı bölge görünür.</p></div>
+    <div class="card"><h3>İmlece doğru zoom</h3><p>Tekerlek imlecin altındaki noktaya yaklaşır. Sürükleyerek kaydırırsın, çift tıklama gerçek boyuta geçer.</p></div>
+    <div class="card"><h3>Klasör bazlı</h3><p>Bir dosya açınca klasördeki fotoğraflar doğal sırayla dizilir, img2 img10'dan önce gelir.</p></div>
+    <div class="card"><h3>Doğru yön</h3><p>Telefonla dik çekilen fotoğrafların EXIF yön bilgisi uygulanır.</p></div>
+    <div class="card"><h3>Biçimler</h3><p>JPEG, PNG, WebP, GIF, BMP, TIFF ve ICO.</p></div>
+  </div>
+
+  <h2 id="kisayollar">Kısayollar</h2>
+  <table>
+    <tr><td><kbd>→</kbd> <kbd>Boşluk</kbd> <kbd>Page Down</kbd></td><td>Sonraki</td></tr>
+    <tr><td><kbd>←</kbd> <kbd>Backspace</kbd> <kbd>Page Up</kbd></td><td>Önceki</td></tr>
+    <tr><td><kbd>Home</kbd> <kbd>End</kbd></td><td>İlk ve son fotoğraf</td></tr>
+    <tr><td>Fare tekerleği</td><td>İmlecin olduğu noktaya yakınlaştır</td></tr>
+    <tr><td><kbd>+</kbd> <kbd>−</kbd></td><td>Yakınlaştır, uzaklaştır</td></tr>
+    <tr><td><kbd>0</kbd></td><td>Pencereye sığdır</td></tr>
+    <tr><td><kbd>1</kbd></td><td>Gerçek boyut</td></tr>
+    <tr><td>Sürükle, <kbd>↑</kbd> <kbd>↓</kbd></td><td>Kaydır</td></tr>
+    <tr><td><kbd>F</kbd> <kbd>F11</kbd> <kbd>Esc</kbd></td><td>Tam ekran</td></tr>
+    <tr><td><kbd>T</kbd></td><td>Tema: sistem, koyu, açık</td></tr>
+    <tr><td><kbd>Ctrl</kbd> <kbd>O</kbd></td><td>Dosya aç</td></tr>
+  </table>
+
+  <h2>Kaynaktan derleme</h2>
+  <pre>git clone https://github.com/misutesu-desu/guren
+cd guren
+cargo build --release</pre>
+</main>
+
+<footer><div class="bar">Guren</div></footer>
+
+<script>
+(function () {
+  var order = ["system", "dark", "light"];
+  var names = { system: "sistem", dark: "koyu", light: "açık" };
+  var btn = document.getElementById("theme");
+  var current = "system";
+  try { current = localStorage.getItem("theme") || "system"; } catch (e) {}
+  if (order.indexOf(current) < 0) current = "system";
+  function apply(t) {
+    if (t === "system") document.documentElement.removeAttribute("data-theme");
+    else document.documentElement.setAttribute("data-theme", t);
+    btn.textContent = "Tema: " + names[t];
+  }
+  apply(current);
+  btn.addEventListener("click", function () {
+    current = order[(order.indexOf(current) + 1) % order.length];
+    apply(current);
+    try { localStorage.setItem("theme", current); } catch (e) {}
+  });
+})();
+</script>
+</body>
+</html>
