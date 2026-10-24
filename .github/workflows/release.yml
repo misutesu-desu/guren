@@ -23,6 +23,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           tag="${GITHUB_REF_NAME}"
+          # checkout turns the annotated tag into a lightweight one, fetch the real object.
+          git fetch --force origin "refs/tags/$tag:refs/tags/$tag"
           if gh release view "$tag" > /dev/null 2>&1; then
             gh release upload "$tag" target/release/guren.exe --clobber
           else
