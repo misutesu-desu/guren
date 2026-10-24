@@ -2,9 +2,9 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 use eframe::egui::{
-    self, Align, Align2, Color32, CornerRadius, CursorIcon, Event, FontFamily, FontId, Key,
-    Layout, Modifiers, MouseWheelUnit, PointerButton, Pos2, Rect, RichText, Sense, Stroke,
-    ThemePreference, Ui, Vec2, ViewportCommand, pos2, vec2,
+    self, Align, Align2, Color32, CornerRadius, CursorIcon, Event, FontFamily, FontId, Key, Layout,
+    Modifiers, MouseWheelUnit, PointerButton, Pos2, Rect, RichText, Sense, Stroke, ThemePreference,
+    Ui, Vec2, ViewportCommand, pos2, vec2,
 };
 
 use crate::folder;
@@ -42,14 +42,14 @@ impl App {
     pub fn new(cc: &eframe::CreationContext<'_>, start: Option<PathBuf>) -> Self {
         let ctx = &cc.egui_ctx;
         let has_icons = theme::install_fonts(ctx);
-        let theme = cc
-            .storage
-            .and_then(|s| s.get_string("theme"))
-            .map_or(ThemePreference::System, |s| match s.as_str() {
-                "dark" => ThemePreference::Dark,
-                "light" => ThemePreference::Light,
-                _ => ThemePreference::System,
-            });
+        let theme =
+            cc.storage
+                .and_then(|s| s.get_string("theme"))
+                .map_or(ThemePreference::System, |s| match s.as_str() {
+                    "dark" => ThemePreference::Dark,
+                    "light" => ThemePreference::Light,
+                    _ => ThemePreference::System,
+                });
         theme::apply(ctx, theme);
         let lang = cc
             .storage
@@ -122,9 +122,7 @@ impl App {
                 self.cache.clear();
             }
             Ok(_) => self.message = Some(self.t().no_images.into()),
-            Err(e) => {
-                self.message = Some(self.t().folder_error.replace("{error}", &e.to_string()))
-            }
+            Err(e) => self.message = Some(self.t().folder_error.replace("{error}", &e.to_string())),
         }
     }
 
@@ -174,7 +172,10 @@ impl App {
         }
 
         let keep: Vec<&PathBuf> = self
-            .near(KEEP).into_iter().map(|i| &self.files[i]).collect();
+            .near(KEEP)
+            .into_iter()
+            .map(|i| &self.files[i])
+            .collect();
         self.cache.retain(|p, _| keep.contains(&p));
 
         let wanted: Vec<PathBuf> = self
@@ -200,7 +201,9 @@ impl App {
             .set_title(self.t().dialog_title)
             .add_filter(
                 self.t().dialog_filter,
-                &["jpg", "jpeg", "jfif", "png", "webp", "gif", "bmp", "tif", "tiff", "ico"],
+                &[
+                    "jpg", "jpeg", "jfif", "png", "webp", "gif", "bmp", "tif", "tiff", "ico",
+                ],
             )
             .pick_files();
         if let Some(paths) = picked {
@@ -253,7 +256,8 @@ impl App {
             if i.consume_key(Modifiers::NONE, Key::End) {
                 action = Some(Action::GoTo(usize::MAX));
             }
-            if i.consume_key(Modifiers::NONE, Key::Plus) || i.consume_key(Modifiers::NONE, Key::Equals)
+            if i.consume_key(Modifiers::NONE, Key::Plus)
+                || i.consume_key(Modifiers::NONE, Key::Equals)
             {
                 action = Some(Action::ZoomBy(STEP));
             }
@@ -332,7 +336,10 @@ impl App {
         let mut action = None;
         ui.horizontal_centered(|ui| {
             ui.add_space(6.0);
-            if self.icon_button(ui, "\u{E8E5}", t.open, t.open_tip).clicked() {
+            if self
+                .icon_button(ui, "\u{E8E5}", t.open, t.open_tip)
+                .clicked()
+            {
                 action = Some(Action::Open);
             }
             ui.add_space(6.0);
@@ -368,7 +375,10 @@ impl App {
                     ThemePreference::Dark => t.theme_dark_tip,
                     ThemePreference::Light => t.theme_light_tip,
                 };
-                if self.icon_button(ui, "\u{E793}", t.theme, theme_tip).clicked() {
+                if self
+                    .icon_button(ui, "\u{E793}", t.theme, theme_tip)
+                    .clicked()
+                {
                     action = Some(Action::Theme);
                 }
                 let lang = egui::Button::new(self.lang.code().to_uppercase())
@@ -390,7 +400,10 @@ impl App {
                     if self.icon_button(ui, "\u{E9A6}", t.fit, t.fit_tip).clicked() {
                         action = Some(Action::Fit);
                     }
-                    if self.icon_button(ui, "\u{E8A3}", "+", t.zoom_in_tip).clicked() {
+                    if self
+                        .icon_button(ui, "\u{E8A3}", "+", t.zoom_in_tip)
+                        .clicked()
+                    {
                         action = Some(Action::ZoomBy(STEP));
                     }
                     let percent = self.zoom_percent(ui.ctx(), area);
@@ -398,7 +411,10 @@ impl App {
                         vec2(52.0, 24.0),
                         egui::Label::new(RichText::new(percent).color(pal.weak)),
                     );
-                    if self.icon_button(ui, "\u{E71F}", "−", t.zoom_out_tip).clicked() {
+                    if self
+                        .icon_button(ui, "\u{E71F}", "−", t.zoom_out_tip)
+                        .clicked()
+                    {
                         action = Some(Action::ZoomBy(1.0 / STEP));
                     }
                 });
@@ -411,12 +427,18 @@ impl App {
 
     fn icon_button(&self, ui: &mut Ui, glyph: &str, fallback: &str, tip: &str) -> egui::Response {
         let text = if self.has_icons {
-            RichText::new(glyph).family(FontFamily::Name(ICONS.into())).size(16.0)
+            RichText::new(glyph)
+                .family(FontFamily::Name(ICONS.into()))
+                .size(16.0)
         } else {
             RichText::new(fallback)
         };
-        ui.add(egui::Button::new(text).frame_when_inactive(false).min_size(vec2(32.0, 24.0)))
-            .on_hover_text(tip)
+        ui.add(
+            egui::Button::new(text)
+                .frame_when_inactive(false)
+                .min_size(vec2(32.0, 24.0)),
+        )
+        .on_hover_text(tip)
     }
 
     fn zoom_percent(&self, ctx: &egui::Context, area: Rect) -> String {
@@ -442,7 +464,10 @@ impl App {
                 pal.weak,
             ));
             ui.add_space(8.0);
-            let name = path.file_name().map(|n| n.to_string_lossy()).unwrap_or_default();
+            let name = path
+                .file_name()
+                .map(|n| n.to_string_lossy())
+                .unwrap_or_default();
             ui.label(small(name.into_owned(), pal.text));
             match self.cache.get(path) {
                 Some(Ok(l)) => {
@@ -481,7 +506,8 @@ impl App {
 
         if let Some(image) = image {
             if response.dragged_by(PointerButton::Primary) {
-                self.view.pan(response.drag_delta() * ppp, image, area_px.size());
+                self.view
+                    .pan(response.drag_delta() * ppp, image, area_px.size());
             }
             if response.hovered() {
                 let zoom = wheel_zoom(&ctx);
@@ -547,7 +573,10 @@ impl App {
                 painter.text(
                     area.center(),
                     Align2::CENTER_CENTER,
-                    self.t().open_failed.replace("{name}", &name).replace("{error}", &e),
+                    self.t()
+                        .open_failed
+                        .replace("{name}", &name)
+                        .replace("{error}", &e),
                     FontId::proportional(14.0),
                     pal.error_text,
                 );
@@ -586,10 +615,11 @@ impl App {
                     ui.label(RichText::new(self.t().or_ctrl_o).color(pal.weak));
                 }
                 ui.add_space(12.0);
-                let open = egui::Button::new(RichText::new(self.t().open_photo).color(pal.on_accent))
-                    .fill(pal.accent_text)
-                    .stroke(Stroke::NONE)
-                    .min_size(vec2(120.0, 32.0));
+                let open =
+                    egui::Button::new(RichText::new(self.t().open_photo).color(pal.on_accent))
+                        .fill(pal.accent_text)
+                        .stroke(Stroke::NONE)
+                        .min_size(vec2(120.0, 32.0));
                 if ui.add(open).clicked() {
                     self.pick_files();
                 }
@@ -631,7 +661,12 @@ impl App {
                 pal.field.gamma_multiply(0.85)
             };
             let p = ui.painter();
-            p.circle(rect.center(), 20.0, fill, Stroke::new(1.0, pal.popup_stroke));
+            p.circle(
+                rect.center(),
+                20.0,
+                fill,
+                Stroke::new(1.0, pal.popup_stroke),
+            );
             let (text, font) = if self.has_icons {
                 (glyph, FontId::new(16.0, FontFamily::Name(ICONS.into())))
             } else {

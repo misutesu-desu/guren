@@ -82,7 +82,10 @@ mod tests {
     fn numbers_sort_by_value() {
         let mut names = vec!["img10.jpg", "img2.jpg", "img1.jpg", "IMG3.jpg", "a.png"];
         names.sort_by(|a, b| natural_cmp(&a.to_lowercase(), &b.to_lowercase()));
-        assert_eq!(names, ["a.png", "img1.jpg", "img2.jpg", "IMG3.jpg", "img10.jpg"]);
+        assert_eq!(
+            names,
+            ["a.png", "img1.jpg", "img2.jpg", "IMG3.jpg", "img10.jpg"]
+        );
     }
 
     #[test]
