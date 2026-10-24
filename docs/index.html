@@ -1,10 +1,12 @@
 <!doctype html>
-<html lang="tr">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Guren</title>
-<meta name="description" content="Windows için hızlı fotoğraf görüntüleyici. Geçişte yakınlaştırma korunur.">
+<link rel="alternate" hreflang="en" href="https://misutesu-desu.github.io/guren/">
+<link rel="alternate" hreflang="tr" href="https://misutesu-desu.github.io/guren/tr/">
+<meta name="description" content="A fast photo viewer for Windows. Zoom stays put when you switch photos.">
 <style>
 :root {
   color-scheme: dark;
@@ -95,48 +97,50 @@ footer .bar { height: 40px; }
   <div class="bar">
     <div class="logo"><span aria-hidden="true"></span>Guren</div>
     <nav>
-      <a class="hide-sm" href="#kisayollar">Kısayollar</a>
+      <a class="hide-sm" href="#shortcuts">Shortcuts</a>
+      <a href="tr/" hreflang="tr" lang="tr">Türkçe</a>
       <a href="https://github.com/misutesu-desu/guren">GitHub</a>
-      <button class="theme" id="theme" type="button">Tema: sistem</button>
+      <button class="theme" id="theme" type="button">Theme: system</button>
     </nav>
   </div>
 </header>
 
 <main>
   <h1>Guren</h1>
-  <p class="lead">Windows için hızlı bir fotoğraf görüntüleyici. Ok tuşlarıyla geçersin, yakınlaştırdığın yer bir sonraki karede de aynı kalır.</p>
+  <p class="lead">A fast photo viewer for Windows. Flip through photos with the arrow keys, and the spot you zoomed into stays the same on the next one.</p>
   <div class="actions">
-    <a class="btn primary" href="https://github.com/misutesu-desu/guren/releases/latest/download/guren.exe">guren.exe indir</a>
-    <a class="btn" href="https://github.com/misutesu-desu/guren/releases">Bütün sürümler</a>
+    <a class="btn primary" href="https://github.com/misutesu-desu/guren/releases/latest/download/guren.exe">Download guren.exe</a>
+    <a class="btn" href="https://github.com/misutesu-desu/guren/releases">All releases</a>
   </div>
-  <p class="note">Kurulum gerekmez. Windows 10 ve 11, 64 bit.</p>
+  <p class="note">No installer. Windows 10 and 11, 64-bit.</p>
 
-  <h2>Neler var</h2>
+  <h2>What it does</h2>
   <div class="grid">
-    <div class="card"><h3>Takılmadan geçiş</h3><p>Fotoğraflar arka planda çözülür, açık olanın iki yanındaki ikişer kare önceden hazır bekler.</p></div>
-    <div class="card"><h3>Zoom korunur</h3><p>Art arda çekilmiş kareleri aynı noktadan karşılaştırırsın. Çözünürlük farklı olsa da aynı bölge görünür.</p></div>
-    <div class="card"><h3>İmlece doğru zoom</h3><p>Tekerlek imlecin altındaki noktaya yaklaşır. Sürükleyerek kaydırırsın, çift tıklama gerçek boyuta geçer.</p></div>
-    <div class="card"><h3>Klasör bazlı</h3><p>Bir dosya açınca klasördeki fotoğraflar doğal sırayla dizilir, img2 img10'dan önce gelir.</p></div>
-    <div class="card"><h3>Doğru yön</h3><p>Telefonla dik çekilen fotoğrafların EXIF yön bilgisi uygulanır.</p></div>
-    <div class="card"><h3>Biçimler</h3><p>JPEG, PNG, WebP, GIF, BMP, TIFF ve ICO.</p></div>
+    <div class="card"><h3>No stutter</h3><p>Photos are decoded in the background. The two photos on each side of the current one are ready before you get there.</p></div>
+    <div class="card"><h3>Zoom stays</h3><p>Compare a burst of shots at the same spot. The same area stays in view even when the resolution differs.</p></div>
+    <div class="card"><h3>Zoom to the cursor</h3><p>The wheel zooms towards the point under the cursor. Drag to pan, double click for actual size.</p></div>
+    <div class="card"><h3>Whole folder</h3><p>Opening a file lines up every photo in its folder in natural order, so img2 comes before img10.</p></div>
+    <div class="card"><h3>Right way up</h3><p>EXIF orientation is applied, so portrait shots from a phone show upright.</p></div>
+    <div class="card"><h3>Formats</h3><p>JPEG, PNG, WebP, GIF, BMP, TIFF and ICO.</p></div>
   </div>
 
-  <h2 id="kisayollar">Kısayollar</h2>
+  <h2 id="shortcuts">Shortcuts</h2>
   <table>
-    <tr><td><kbd>→</kbd> <kbd>Boşluk</kbd> <kbd>Page Down</kbd></td><td>Sonraki</td></tr>
-    <tr><td><kbd>←</kbd> <kbd>Backspace</kbd> <kbd>Page Up</kbd></td><td>Önceki</td></tr>
-    <tr><td><kbd>Home</kbd> <kbd>End</kbd></td><td>İlk ve son fotoğraf</td></tr>
-    <tr><td>Fare tekerleği</td><td>İmlecin olduğu noktaya yakınlaştır</td></tr>
-    <tr><td><kbd>+</kbd> <kbd>−</kbd></td><td>Yakınlaştır, uzaklaştır</td></tr>
-    <tr><td><kbd>0</kbd></td><td>Pencereye sığdır</td></tr>
-    <tr><td><kbd>1</kbd></td><td>Gerçek boyut</td></tr>
-    <tr><td>Sürükle, <kbd>↑</kbd> <kbd>↓</kbd></td><td>Kaydır</td></tr>
-    <tr><td><kbd>F</kbd> <kbd>F11</kbd> <kbd>Esc</kbd></td><td>Tam ekran</td></tr>
-    <tr><td><kbd>T</kbd></td><td>Tema: sistem, koyu, açık</td></tr>
-    <tr><td><kbd>Ctrl</kbd> <kbd>O</kbd></td><td>Dosya aç</td></tr>
+    <tr><td><kbd>→</kbd> <kbd>Space</kbd> <kbd>Page Down</kbd></td><td>Next</td></tr>
+    <tr><td><kbd>←</kbd> <kbd>Backspace</kbd> <kbd>Page Up</kbd></td><td>Previous</td></tr>
+    <tr><td><kbd>Home</kbd> <kbd>End</kbd></td><td>First and last photo</td></tr>
+    <tr><td>Mouse wheel</td><td>Zoom towards the cursor</td></tr>
+    <tr><td><kbd>+</kbd> <kbd>−</kbd></td><td>Zoom in, zoom out</td></tr>
+    <tr><td><kbd>0</kbd></td><td>Fit to window</td></tr>
+    <tr><td><kbd>1</kbd></td><td>Actual size</td></tr>
+    <tr><td>Drag, <kbd>↑</kbd> <kbd>↓</kbd></td><td>Pan</td></tr>
+    <tr><td><kbd>F</kbd> <kbd>F11</kbd> <kbd>Esc</kbd></td><td>Full screen</td></tr>
+    <tr><td><kbd>T</kbd></td><td>Theme: system, dark, light</td></tr>
+    <tr><td><kbd>L</kbd></td><td>Language: English, Turkish</td></tr>
+    <tr><td><kbd>Ctrl</kbd> <kbd>O</kbd></td><td>Open a file</td></tr>
   </table>
 
-  <h2>Kaynaktan derleme</h2>
+  <h2>Build from source</h2>
   <pre>git clone https://github.com/misutesu-desu/guren
 cd guren
 cargo build --release</pre>
@@ -147,7 +151,7 @@ cargo build --release</pre>
 <script>
 (function () {
   var order = ["system", "dark", "light"];
-  var names = { system: "sistem", dark: "koyu", light: "açık" };
+  var names = { system: "system", dark: "dark", light: "light" };
   var btn = document.getElementById("theme");
   var current = "system";
   try { current = localStorage.getItem("theme") || "system"; } catch (e) {}
@@ -155,7 +159,7 @@ cargo build --release</pre>
   function apply(t) {
     if (t === "system") document.documentElement.removeAttribute("data-theme");
     else document.documentElement.setAttribute("data-theme", t);
-    btn.textContent = "Tema: " + names[t];
+    btn.textContent = "Theme: " + names[t];
   }
   apply(current);
   btn.addEventListener("click", function () {
