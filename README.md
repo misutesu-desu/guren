@@ -1,32 +1,39 @@
 # Guren
 
-Rust ve egui ile yazılmış hızlı bir fotoğraf görüntüleyici. Fotoğraflar arka plandaki iş parçacıklarında çözülür, açık olanın iki yanındaki ikişer fotoğraf önceden hazırlanır. Geçişte yakınlaştırma ve kaydırma korunur, art arda çekilmiş kareleri aynı noktadan karşılaştırabilirsiniz.
+English · [Türkçe](README.tr.md)
 
-JPEG, PNG, WebP, GIF, BMP, TIFF ve ICO açar. EXIF yön bilgisini uygular.
+A fast photo viewer for Windows, written in Rust with egui. Photos are decoded on background threads and the two photos on each side of the current one are prepared ahead of time. Zoom and pan stay the same when you move to the next photo, so you can compare a burst of shots at the same spot.
 
-## Derleme
+Opens JPEG, PNG, WebP, GIF, BMP, TIFF and ICO, and applies the EXIF orientation.
+
+## Download
+
+Get `guren.exe` from the [latest release](https://github.com/misutesu-desu/guren/releases/latest). No installer, just run it.
+
+## Building
 
 ```bash
 cargo build --release
 ```
 
-Çıktı `target/release/guren.exe`. Bir dosyayı ya da klasörü argüman olarak verebilir, pencereye sürükleyip bırakabilir ya da Ctrl+O ile seçebilirsiniz. Bir dosya açılınca bulunduğu klasördeki bütün fotoğraflar sıraya girer.
+The binary ends up in `target/release/guren.exe`. Pass a file or folder as an argument, drop one on the window or pick one with Ctrl+O. Opening a file lines up every photo in its folder.
 
-## Kısayollar
+## Shortcuts
 
-| Tuş | İş |
+| Key | Action |
 |---|---|
-| → · Boşluk · Page Down | Sonraki |
-| ← · Backspace · Page Up | Önceki |
-| Home · End | İlk · son |
-| Fare tekerleği | İmlecin olduğu noktaya yakınlaştır |
-| Sürükle · ↑ ↓ | Kaydır |
-| + · − | Yakınlaştır · uzaklaştır |
-| 0 | Pencereye sığdır |
-| 1 | Gerçek boyut |
-| Çift tıklama | Sığdır ile gerçek boyut arasında geç |
-| F · F11 · Esc | Tam ekran |
-| T | Tema: sistem, koyu, açık |
-| Ctrl+O | Aç |
+| → · Space · Page Down | Next |
+| ← · Backspace · Page Up | Previous |
+| Home · End | First · last |
+| Mouse wheel | Zoom towards the cursor |
+| Drag · ↑ ↓ | Pan |
+| + · − | Zoom in · out |
+| 0 | Fit to window |
+| 1 | Actual size |
+| Double click | Toggle between fit and actual size |
+| F · F11 · Esc | Full screen |
+| T | Theme: system, dark, light |
+| L | Language: English, Turkish |
+| Ctrl+O | Open |
 
-Farenin geri ve ileri tuşları da fotoğraflar arasında geçer.
+The back and forward mouse buttons also switch photos. The interface starts in Turkish when the system language is Turkish and in English otherwise.
