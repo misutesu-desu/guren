@@ -77,6 +77,7 @@ pub struct Text {
     pub default_hint: &'static str,
     pub default_removed: &'static str,
     pub assoc_failed: &'static str,
+    pub frames: &'static str,
 }
 
 pub const EN: Text = Text {
@@ -113,6 +114,7 @@ pub const EN: Text = Text {
     default_hint: "Pick Guren as the photo viewer in Settings",
     default_removed: "Guren is no longer offered for photos",
     assoc_failed: "Could not change file associations: {error}",
+    frames: "{n} frames",
 };
 
 pub const TR: Text = Text {
@@ -149,4 +151,5 @@ pub const TR: Text = Text {
     default_hint: "Ayarlar'da fotoğraf görüntüleyici olarak Guren'i seçin",
     default_removed: "Guren artık fotoğraflar için önerilmiyor",
     assoc_failed: "Dosya ilişkilendirmeleri değiştirilemedi: {error}",
+    frames: "{n} kare",
 };

@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
+use std::time::Instant;
 
 use eframe::egui::{
     self, Align, Align2, Color32, CornerRadius, CursorIcon, Event, FontFamily, FontId, Key, Layout,
@@ -33,6 +35,8 @@ pub struct App {
     view: View,
     /// The last photo that was on screen. Stays visible, dimmed, while the next one decodes.
     shown: Option<Loaded>,
+    /// When `shown` last changed. Animations play from this moment.
+    shown_since: Instant,
     theme: ThemePreference,
     lang: Lang,
     has_icons: bool,
@@ -74,6 +78,7 @@ impl App {
             loader,
             view: View::default(),
             shown: None,
+            shown_since: Instant::now(),
             theme,
             lang,
             has_icons,
@@ -543,6 +548,12 @@ impl App {
                         ui.label(small(format!("{} × {}", l.size[0], l.size[1]), pal.weak));
                         ui.add_space(8.0);
                         ui.label(small(human_size(l.bytes), pal.weak));
+                        if l.is_animated() {
+                            ui.add_space(8.0);
+                            let frames =
+                                self.t().frames.replace("{n}", &l.frames.len().to_string());
+                            ui.label(small(frames, pal.weak));
+                        }
                     }
                     Some(Err(_)) => {}
                     None => {
@@ -570,7 +581,14 @@ impl App {
         let outcome = current.as_ref().and_then(|p| self.cache.get(p)).cloned();
         let ready = matches!(outcome, Some(Ok(_)));
         if let Some(Ok(l)) = &outcome {
-            self.shown = Some(l.clone());
+            let same = self
+                .shown
+                .as_ref()
+                .is_some_and(|s| Arc::ptr_eq(&s.frames, &l.frames));
+            if !same {
+                self.shown = Some(l.clone());
+                self.shown_since = Instant::now();
+            }
         }
         if current.is_none() {
             self.shown = None;
@@ -623,8 +641,12 @@ impl App {
             } else {
                 Color32::from_white_alpha(110)
             };
+            let (frame, left) = l.frame_at(self.shown_since.elapsed());
+            if l.is_animated() {
+                ctx.request_repaint_after(left);
+            }
             painter.image(
-                l.frames[0].texture.id(),
+                frame.texture.id(),
                 rect,
                 Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)),
                 tint,
