@@ -4,7 +4,7 @@ English · [Türkçe](README.tr.md)
 
 A fast photo viewer for Windows, written in Rust with egui. Photos are decoded on background threads and the two photos on each side of the current one are prepared ahead of time. Zoom and pan stay the same when you move to the next photo, so you can compare a burst of shots at the same spot.
 
-Opens JPEG, PNG, WebP, GIF, BMP, TIFF and ICO, and applies the EXIF orientation.
+Opens JPEG, PNG, WebP, GIF, BMP, TIFF and ICO, and applies the EXIF orientation. Animated GIF, WebP and PNG files play.
 
 ## Download
 

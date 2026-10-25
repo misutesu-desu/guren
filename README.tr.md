@@ -4,7 +4,7 @@
 
 Rust ve egui ile yazılmış hızlı bir fotoğraf görüntüleyici. Fotoğraflar arka plandaki iş parçacıklarında çözülür, açık olanın iki yanındaki ikişer fotoğraf önceden hazırlanır. Geçişte yakınlaştırma ve kaydırma korunur, art arda çekilmiş kareleri aynı noktadan karşılaştırabilirsiniz.
 
-JPEG, PNG, WebP, GIF, BMP, TIFF ve ICO açar. EXIF yön bilgisini uygular.
+JPEG, PNG, WebP, GIF, BMP, TIFF ve ICO açar. EXIF yön bilgisini uygular. Animasyonlu GIF, WebP ve PNG dosyaları oynatılır.
 
 ## İndirme
 
