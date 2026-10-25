@@ -13,6 +13,12 @@ use eframe::egui;
 
 fn main() -> eframe::Result {
     let start = std::env::args_os().nth(1).map(std::path::PathBuf::from);
+    // Creating the window and its GPU context takes a few hundred milliseconds,
+    // so the photo is decoded in the meantime.
+    let loader = loader::Loader::new();
+    if let Some(path) = start.as_ref().filter(|p| p.is_file()) {
+        loader.want([path.clone()]);
+    }
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
             .with_title("Guren")
@@ -24,6 +30,6 @@ fn main() -> eframe::Result {
     eframe::run_native(
         "Guren",
         options,
-        Box::new(|cc| Ok(Box::new(app::App::new(cc, start)))),
+        Box::new(|cc| Ok(Box::new(app::App::new(cc, start, loader)))),
     )
 }

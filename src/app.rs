@@ -11,7 +11,7 @@ use eframe::egui::{
 use crate::assoc;
 use crate::folder;
 use crate::i18n::{Lang, Text};
-use crate::loader::{Loaded, Loader, Outcome};
+use crate::loader::{Loaded, Loader};
 use crate::theme::{self, ICONS, Pal};
 use crate::view::{STEP, View, Zoom, fit_scale};
 
@@ -28,7 +28,7 @@ pub struct App {
     index: usize,
     /// +1 or -1, the direction of the last move. Prefetch favors that side.
     direction: isize,
-    cache: HashMap<PathBuf, Outcome>,
+    cache: HashMap<PathBuf, Result<Loaded, String>>,
     loader: Loader,
     view: View,
     /// The last photo that was on screen. Stays visible, dimmed, while the next one decodes.
@@ -43,8 +43,13 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(cc: &eframe::CreationContext<'_>, start: Option<PathBuf>) -> Self {
+    pub fn new(cc: &eframe::CreationContext<'_>, start: Option<PathBuf>, loader: Loader) -> Self {
         let ctx = &cc.egui_ctx;
+        let max_side = cc.gl.as_ref().map_or(loader.max_side(), |gl| {
+            use eframe::glow::HasContext;
+            unsafe { gl.get_parameter_i32(eframe::glow::MAX_TEXTURE_SIZE) as usize }
+        });
+        loader.attach(ctx, max_side);
         let has_icons = theme::install_fonts(ctx);
         let theme =
             cc.storage
@@ -66,7 +71,7 @@ impl App {
             index: 0,
             direction: 1,
             cache: HashMap::new(),
-            loader: Loader::new(ctx),
+            loader,
             view: View::default(),
             shown: None,
             theme,
@@ -191,9 +196,20 @@ impl App {
     }
 
     /// Queues the current photo first, then its neighbors in the direction of travel.
-    fn schedule(&mut self) {
+    fn schedule(&mut self, ctx: &egui::Context) {
+        let max_side = self.loader.max_side();
         for (path, outcome) in self.loader.poll().collect::<Vec<_>>() {
-            self.cache.insert(path, outcome);
+            match outcome {
+                Ok(decoded) => {
+                    // Too large for this GPU: stays out of the cache and is decoded again below.
+                    if let Some(loaded) = decoded.upload(ctx, &path, max_side) {
+                        self.cache.insert(path, Ok(loaded));
+                    }
+                }
+                Err(e) => {
+                    self.cache.insert(path, Err(e));
+                }
+            }
         }
         if self.files.is_empty() {
             return;
@@ -608,7 +624,7 @@ impl App {
                 Color32::from_white_alpha(110)
             };
             painter.image(
-                l.texture.id(),
+                l.frames[0].texture.id(),
                 rect,
                 Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)),
                 tint,
@@ -781,7 +797,7 @@ impl eframe::App for App {
         }
 
         self.keyboard(&ctx, area);
-        self.schedule();
+        self.schedule(&ctx);
         self.update_title(&ctx);
 
         if !full {
