@@ -14,6 +14,10 @@ JPEG, PNG, WebP, GIF, BMP, TIFF ve ICO açar. EXIF yön bilgisini uygular. Anima
 
 Sağ üstteki ⋯ menüsünden **Varsayılan fotoğraf görüntüleyici yap**'ı seçin. Guren kendini kullanıcı hesabınıza kaydeder, yönetici izni gerekmez, ardından Windows'un Varsayılan uygulamalar sayfası açılır. Windows programların kendini varsayılan yapmasına izin vermez, bu yüzden son adımda Guren'i orada seçin. Aynı menüdeki **Birlikte aç listesinden kaldır** kaydı geri alır. `guren.exe`'yi başka yere taşırsanız bir sonraki açılışta kayıtlı yol güncellenir.
 
+## Anında açılış
+
+Guren'in açılması yaklaşık çeyrek saniye sürer, çoğu ekran kartı sürücüsünün başlaması. ⋯ menüsünden **Arka planda açık kalsın**'ı açarsanız bu süre ortadan kalkar: pencereyi kapatınca yalnız gizlenir, Explorer'dan ya da başka bir yerden açtığınız sonraki fotoğraf gizli pencereye iletilir ve hemen görünür. Gizli pencere fotoğrafları bellekten atar ama grafik bağlamını tutar, yani bir miktar bellek kullanmaya devam eder. Aynı menüdeki **Guren'den çık** programı gerçekten kapatır.
+
 ## Derleme
 
 ```bash

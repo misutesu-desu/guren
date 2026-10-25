@@ -14,6 +14,10 @@ Get `guren.exe` from the [latest release](https://github.com/misutesu-desu/guren
 
 Open the ⋯ menu in the top right and choose **Set as default photo viewer**. Guren registers itself for your user account, no admin rights needed, and the Windows Default apps page opens. Windows does not let programs make themselves the default, so pick Guren there to finish. **Remove from Open with** in the same menu undoes the registration. If you move `guren.exe`, it updates the registered path on the next start.
 
+## Instant start
+
+Opening Guren takes about a quarter of a second, most of it the graphics driver starting up. Turn on **Keep running in the background** in the ⋯ menu to skip that: closing the window then only hides it, and the next photo you open, from Explorer or anywhere else, is handed to the hidden window and shows right away. The hidden window frees its photos but keeps the graphics context, so it still uses some memory. **Quit Guren** in the same menu closes it for real.
+
 ## Building
 
 ```bash
