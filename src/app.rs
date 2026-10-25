@@ -9,18 +9,22 @@ use eframe::egui::{
     Ui, Vec2, ViewportCommand, pos2, vec2,
 };
 
-#[cfg(windows)]
-use crate::assoc;
 use crate::folder;
 use crate::i18n::{Lang, Text};
 use crate::loader::{Loaded, Loader};
 use crate::theme::{self, ICONS, Pal};
 use crate::view::{STEP, View, Zoom, fit_scale};
+#[cfg(windows)]
+use crate::{assoc, ipc};
 
 /// How many photos on each side of the current one are decoded ahead of time.
 const PREFETCH: usize = 2;
 /// Textures further away than this are dropped to keep GPU memory bounded.
 const KEEP: usize = 3;
+
+/// Longest a hidden window waits for its photo before showing anyway.
+#[cfg(windows)]
+const SHOW_WAIT: std::time::Duration = std::time::Duration::from_millis(250);
 
 const TOOLBAR_H: f32 = 32.0;
 const STATUS_H: f32 = 23.0;
@@ -44,6 +48,53 @@ pub struct App {
     /// Short feedback in the status bar, such as the result of a menu action.
     notice: Option<String>,
     title: String,
+    #[cfg(windows)]
+    background: Background,
+}
+
+/// State of the keep-running mode, where closing the window only hides it
+/// and later launches hand their photo over through [`ipc`].
+#[cfg(windows)]
+struct Background {
+    on: bool,
+    server: Option<ipc::Server>,
+    inbox: std::sync::mpsc::Receiver<Option<PathBuf>>,
+    outbox: std::sync::mpsc::Sender<Option<PathBuf>>,
+    /// Set by the quit command so that the close goes through.
+    quitting: bool,
+    /// Focus has no effect on a hidden window, so it is sent one frame after showing it.
+    focus_next: bool,
+    /// A launch asked for the window. It stays hidden until the photo is ready,
+    /// so it does not flash an empty canvas first.
+    show_requested: Option<Instant>,
+}
+
+#[cfg(windows)]
+impl Background {
+    fn new(ctx: &egui::Context, on: bool) -> Self {
+        let (outbox, inbox) = std::sync::mpsc::channel();
+        let server = on
+            .then(|| ipc::Server::start(ctx, outbox.clone()))
+            .flatten();
+        Self {
+            on,
+            server,
+            inbox,
+            outbox,
+            quitting: false,
+            focus_next: false,
+            show_requested: None,
+        }
+    }
+
+    fn set(&mut self, ctx: &egui::Context, on: bool) {
+        self.on = on;
+        match &self.server {
+            Some(server) => server.set_enabled(on),
+            None if on => self.server = ipc::Server::start(ctx, self.outbox.clone()),
+            None => {}
+        }
+    }
 }
 
 impl App {
@@ -85,6 +136,14 @@ impl App {
             message: None,
             notice: None,
             title: String::new(),
+            #[cfg(windows)]
+            background: Background::new(
+                ctx,
+                cc.storage
+                    .and_then(|s| s.get_string("keep_running"))
+                    .as_deref()
+                    == Some("1"),
+            ),
         };
         if let Some(path) = start {
             app.open(vec![path]);
@@ -105,6 +164,58 @@ impl App {
             }
             Err(e) => self.notice = Some(self.t().assoc_failed.replace("{error}", &e.to_string())),
         }
+    }
+
+    /// Opens photos sent by later launches and brings the window back.
+    #[cfg(windows)]
+    fn take_hand_offs(&mut self, ctx: &egui::Context) {
+        while let Ok(path) = self.background.inbox.try_recv() {
+            self.background.show_requested = Some(Instant::now());
+            if let Some(path) = path {
+                self.view = View::default();
+                self.open(vec![path]);
+            }
+        }
+        let Some(since) = self.background.show_requested else {
+            return;
+        };
+        // While hidden only this runs, so decoded photos are picked up here.
+        self.schedule(ctx);
+        let ready = self.current().is_none_or(|p| self.cache.contains_key(p));
+        if ready || since.elapsed() >= SHOW_WAIT {
+            ctx.send_viewport_cmd(ViewportCommand::Visible(true));
+            self.background.focus_next = true;
+            self.background.show_requested = None;
+            ctx.request_repaint();
+        } else {
+            ctx.request_repaint_after(SHOW_WAIT - since.elapsed());
+        }
+    }
+
+    /// Hides the window instead of closing it while keep-running is on.
+    #[cfg(windows)]
+    fn intercept_close(&mut self, ctx: &egui::Context) {
+        if self.background.focus_next {
+            ctx.send_viewport_cmd(ViewportCommand::Focus);
+            self.background.focus_next = false;
+        }
+        let closing = ctx.input(|i| i.viewport().close_requested());
+        if !closing || !self.background.on || self.background.quitting {
+            return;
+        }
+        ctx.send_viewport_cmd(ViewportCommand::CancelClose);
+        ctx.send_viewport_cmd(ViewportCommand::Fullscreen(false));
+        ctx.send_viewport_cmd(ViewportCommand::Visible(false));
+        self.files.clear();
+        self.index = 0;
+        self.cache.clear();
+        self.shown = None;
+        self.loader.want([]);
+        self.message = None;
+        self.notice = None;
+        self.view = View::default();
+        // Freed textures only leave the GPU when a frame is painted.
+        ctx.send_viewport_cmd(ViewportCommand::RequestPaintWhileHidden);
     }
 
     #[cfg(windows)]
@@ -376,6 +487,13 @@ impl App {
             Action::SetDefault => self.set_default(),
             #[cfg(windows)]
             Action::RemoveDefault => self.remove_default(),
+            #[cfg(windows)]
+            Action::KeepRunning(on) => self.background.set(ctx, on),
+            #[cfg(windows)]
+            Action::Quit => {
+                self.background.quitting = true;
+                ctx.send_viewport_cmd(ViewportCommand::Close);
+            }
         }
     }
 
@@ -494,6 +612,18 @@ impl App {
                 .clicked()
             {
                 *action = Some(Action::RemoveDefault);
+            }
+            ui.separator();
+            let mut on = self.background.on;
+            if ui
+                .checkbox(&mut on, t.keep_running)
+                .on_hover_text(t.keep_running_tip)
+                .changed()
+            {
+                *action = Some(Action::KeepRunning(on));
+            }
+            if self.background.on && ui.button(t.quit).clicked() {
+                *action = Some(Action::Quit);
             }
         })
         .response
@@ -792,11 +922,22 @@ enum Action {
     SetDefault,
     #[cfg(windows)]
     RemoveDefault,
+    #[cfg(windows)]
+    KeepRunning(bool),
+    #[cfg(windows)]
+    Quit,
 }
 
 impl eframe::App for App {
+    #[cfg(windows)]
+    fn logic(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        self.take_hand_offs(ctx);
+    }
+
     fn ui(&mut self, ui: &mut Ui, _frame: &mut eframe::Frame) {
         let ctx = ui.ctx().clone();
+        #[cfg(windows)]
+        self.intercept_close(&ctx);
         let pal = theme::pal(ctx.theme());
 
         let dropped: Vec<PathBuf> = ctx.input(|i| {
@@ -861,6 +1002,11 @@ impl eframe::App for App {
         };
         storage.set_string("theme", theme.into());
         storage.set_string("lang", self.lang.code().into());
+        #[cfg(windows)]
+        storage.set_string(
+            "keep_running",
+            if self.background.on { "1" } else { "0" }.into(),
+        );
     }
 }
 

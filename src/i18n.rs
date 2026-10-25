@@ -78,6 +78,9 @@ pub struct Text {
     pub default_removed: &'static str,
     pub assoc_failed: &'static str,
     pub frames: &'static str,
+    pub keep_running: &'static str,
+    pub keep_running_tip: &'static str,
+    pub quit: &'static str,
 }
 
 pub const EN: Text = Text {
@@ -115,6 +118,9 @@ pub const EN: Text = Text {
     default_removed: "Guren is no longer offered for photos",
     assoc_failed: "Could not change file associations: {error}",
     frames: "{n} frames",
+    keep_running: "Keep running in the background",
+    keep_running_tip: "Closing the window only hides it, so the next photo opens instantly",
+    quit: "Quit Guren",
 };
 
 pub const TR: Text = Text {
@@ -152,4 +158,7 @@ pub const TR: Text = Text {
     default_removed: "Guren artık fotoğraflar için önerilmiyor",
     assoc_failed: "Dosya ilişkilendirmeleri değiştirilemedi: {error}",
     frames: "{n} kare",
+    keep_running: "Arka planda açık kalsın",
+    keep_running_tip: "Pencereyi kapatınca yalnız gizlenir, sonraki fotoğraf anında açılır",
+    quit: "Guren'den çık",
 };

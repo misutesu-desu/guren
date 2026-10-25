@@ -5,6 +5,8 @@ mod app;
 mod assoc;
 mod folder;
 mod i18n;
+#[cfg(windows)]
+mod ipc;
 mod loader;
 mod theme;
 mod view;
@@ -13,6 +15,10 @@ use eframe::egui;
 
 fn main() -> eframe::Result {
     let start = std::env::args_os().nth(1).map(std::path::PathBuf::from);
+    #[cfg(windows)]
+    if ipc::hand_off(start.as_deref()) {
+        return Ok(());
+    }
     // Creating the window and its GPU context takes a few hundred milliseconds,
     // so the photo is decoded in the meantime.
     let loader = loader::Loader::new();
